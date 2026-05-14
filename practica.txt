@@ -1,0 +1,222 @@
+Práctica
+Topic Modeling con BERTopic
+
+Extracción automática de tópicos sobre un dataset real
+
+Campo: Modalidad
+Detalle: Individual
+
+Campo: Duración estimada
+Detalle: 4–6 horas
+
+Campo: Entrega
+Detalle: Notebook .ipynb, Notebook .html + informe PDF (máx. 10 páginas)
+
+Campo: Herramientas
+Detalle: Python · BERTopic · scikit-learn · Hugging Face
+
+Campo: Fecha límite
+Detalle: 20 de mayo
+
+Este documento describe los objetivos, tareas y criterios de evaluación de la práctica. Léelo íntegramente antes de comenzar.
+
+1. Introducción y objetivos
+
+En esta práctica aplicarás las técnicas de topic modeling vistas en clase sobre un dataset de tu elección, diferente al usado en el notebook de referencia (20 Newsgroups). El objetivo es demostrar que comprendes los fundamentos conceptuales de LDA, NMF y BERTopic, y que eres capaz de tomar decisiones técnicas justificadas al enfrentarte a datos reales.
+
+Al completar la práctica serás capaz de:
+
+- Cargar, explorar y preparar un corpus de texto para topic modeling
+- Aplicar y configurar correctamente LDA, NMF y BERTopic
+- Gestionar stopwords, vectorizadores y parámetros de clustering
+- Evaluar la calidad de los tópicos mediante métricas de coherencia
+- Interpretar los resultados en términos del dominio del dataset elegido
+- Generar etiquetas automáticas con LLMs gratuitos (Hugging Face API o modelo local)
+
+Nota sobre el dataset
+
+Debes usar un dataset distinto al de 20 Newsgroups. Algunos datasets recomendados:
+
+- ag_news — noticias en inglés (Hugging Face)
+- amazon_polarity — reseñas de productos
+- Tweets de un tema concreto (Twitter/X API gratuita)
+- Cualquier CSV con una columna de texto (artículos, comentarios, abstracts...)
+
+2. Replicar y adaptar
+
+El objetivo de este nivel es replicar el pipeline completo del notebook de referencia sobre un dataset diferente, resolviendo los problemas que surjan y documentando cada decisión tomada.
+
+2.1 Tareas obligatorias
+
+Tarea 1 — Carga y exploración del dataset
+
+Carga tu dataset y genera un resumen exploratorio que incluya:
+
+- Número total de documentos y distribución de longitudes (mínimo, máximo, media, mediana)
+- Histograma de longitudes de documento
+- Las 30 palabras más frecuentes antes de cualquier preprocesamiento (nube de palabras o tabla)
+- Identificación de posibles problemas: documentos vacíos, idioma mezclado, encoding incorrecto
+
+Tarea 2 — Preprocesamiento
+
+Prepara dos versiones del corpus:
+
+- docs_clean: para LDA y NMF (lematización + stopwords + limpieza agresiva)
+- docs_bert: para BERTopic (limpieza mínima que preserve contexto semántico)
+
+Deberás justificar en el informe por qué BERTopic requiere menos preprocesamiento que LDA y NMF.
+
+Tarea 3 — LDA y NMF baseline
+
+Entrena ambos modelos con N_TOPICS entre 10 y 30 (justifica tu elección). Para cada modelo:
+
+- Muestra las top-10 palabras de los 5 tópicos más grandes
+- Asigna manualmente una etiqueta temática a cada tópico
+- Calcula la coherencia c_v con Gensim
+
+Tarea 4 — BERTopic
+
+Configura y entrena BERTopic con:
+
+- Un CountVectorizer con stopwords apropiadas para tu dataset (min_df=1, max_df=1.0)
+- ClassTfidfTransformer con bm25_weighting=True y reduce_frequent_words=True
+- UMAP y HDBSCAN con los parámetros del notebook o ajustados a tu caso
+
+Documenta cualquier error que encuentres (por ejemplo, el error max_df/min_df) y cómo lo resolviste.
+
+Tarea 5 — Etiquetas automáticas con LLM
+
+Genera etiquetas en lenguaje natural para los tópicos de BERTopic usando una de estas opciones:
+
+- Opción A: modelo local de Hugging Face (Phi-3-mini, Gemma-2b o similar)
+- Opción B: HF Inference API con token gratuito (Mistral-7B-Instruct)
+
+Registra las etiquetas con set_topic_labels() y úsalas en todas las visualizaciones.
+
+Tarea 6 — Visualizaciones
+
+Genera y guarda en HTML las siguientes visualizaciones de BERTopic, todas con custom_labels=True:
+
+- visualize_topics() — mapa 2D de tópicos
+- visualize_barchart(top_n_topics=8) — top palabras por tópico
+- visualize_heatmap() — similitud entre tópicos
+- visualize_hierarchy() — dendrograma jerárquico
+
+2.2 Preguntas de reflexión
+
+Responde estas preguntas en el informe (máximo 1 párrafo por pregunta):
+
+P1. ¿Qué diferencias observas entre los tópicos de LDA, NMF y BERTopic en tu dataset? ¿A qué atribuyes esas diferencias?
+
+P2. ¿Qué stopwords tuviste que añadir específicamente para tu dataset? ¿Por qué no estaban cubiertas por la lista de NLTK?
+
+P3. ¿Qué opción de etiquetado LLM usaste y por qué? ¿Cómo evaluarías la calidad de las etiquetas generadas?
+
+3. Análisis crítico y experimentación
+
+Este nivel requiere ir más allá de la ejecución del notebook. Se espera experimentación, análisis comparativo y capacidad de argumentar las decisiones tomadas con evidencia empírica.
+
+3.1 Experimento A — Impacto de min_cluster_size en BERTopic
+
+Entrena BERTopic tres veces con los mismos embeddings (guárdalos con np.save para no recalcularlos) pero variando min_cluster_size:
+
+Experimento: A1
+min_cluster_size: 10
+Qué observar: ¿Cuántos tópicos aparecen? ¿Son coherentes o muy fragmentados?
+
+Experimento: A2
+min_cluster_size: 50 (baseline)
+Qué observar: Referencia del notebook
+
+Experimento: A3
+min_cluster_size: 150
+Qué observar: ¿Se pierden tópicos relevantes? ¿Aumentan los outliers?
+
+Para cada configuración reporta: número de tópicos encontrados, porcentaje de documentos outlier (-1), coherencia c_v de los 10 tópicos más grandes, y una valoración cualitativa de la calidad temática.
+
+Pregunta a responder:
+
+¿Qué valor de min_cluster_size elegirías para tu dataset y por qué? Apoya tu respuesta con los resultados de los tres experimentos, no solo con intuición.
+
+3.2 Comparativa de representaciones
+
+Para los 5 tópicos más grandes de BERTopic, compara en una tabla las palabras clave obtenidas con tres estrategias distintas:
+
+Tópico | c-TF-IDF puro | KeyBERT | Etiqueta LLM
+Topic 0 | ... | ... | ...
+Topic 1 | ... | ... | ...
+Topic 2 | ... | ... | ...
+Topic 3 | ... | ... | ...
+Topic 4 | ... | ... | ...
+
+Preguntas a responder:
+
+- ¿En qué tópicos aporta más valor KeyBERT respecto a c-TF-IDF? ¿Por qué?
+- ¿Cuándo la etiqueta LLM añade información real que no está en las palabras clave?
+- ¿Hay algún tópico donde el LLM haya generado una etiqueta incorrecta o engañosa? ¿A qué lo atribuyes?
+
+3.3 Modelo de embeddings
+
+Repite el entrenamiento de BERTopic con dos modelos de embeddings diferentes y compara los resultados:
+
+- all-MiniLM-L6-v2 (el del notebook, rápido, 384 dimensiones)
+- paraphrase-multilingual-MiniLM-L12-v2 (multilingüe, 384 dimensiones)
+- Otro modelo de tu elección justificado (ver sbert.net/docs/pretrained_models.html)
+
+Para comparar usa: coherencia c_v, número de tópicos encontrados, y una valoración cualitativa de si los tópicos tienen más o menos sentido semántico. Usa los mismos embeddings pre-calculados del Experimento A cuando sea posible para ahorrar tiempo.
+
+4. Formato de entrega
+
+4.1 Notebook (.ipynb)
+
+El notebook debe estar limpio y ejecutable de principio a fin sin errores. Estructura mínima:
+
+1. Carga y exploración del dataset
+2. Preprocesamiento
+3. LDA baseline
+4. NMF baseline
+5. BERTopic — configuración y entrenamiento
+6. Etiquetas LLM
+7. Visualizaciones
+8. Comparativa y métricas (Nivel 2)
+9. Conclusiones
+
+Cada celda importante debe ir precedida de una celda Markdown que explique qué se va a hacer y por qué, no solo cómo.
+
+4.2 Informe (PDF, máx. 10 páginas)
+
+El informe no es una descripción del código — es un análisis de los resultados. Estructura:
+
+- Descripción del dataset: origen, tamaño, dominio, decisiones de preprocesamiento
+- Resultados comparativos: tabla con coherencia c_v de LDA, NMF y BERTopic
+- Análisis de los tópicos: interpretación temática de los 5 más relevantes
+- Respuestas a las preguntas de reflexión (Niveles 1 y 2)
+- Conclusión: qué método recomendarías para este dataset y por qué
+
+6. Recursos de referencia
+
+Recurso: BERTopic documentación oficial
+URL: maartengr.github.io/BERTopic
+
+Recurso: Sentence Transformers — modelos disponibles
+URL: sbert.net/docs/pretrained_models.html
+
+Recurso: Hugging Face Inference API gratuita
+URL: huggingface.co/docs/api-inference
+
+Recurso: Datasets de Hugging Face
+URL: huggingface.co/datasets
+
+Recurso: Gensim — CoherenceModel
+URL: radimrehurek.com/gensim/models/coherencemodel.html
+
+Recurso: scikit-learn — CountVectorizer
+URL: scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html
+
+Para obtener el token gratuito de Hugging Face necesario para la Opción B del etiquetado LLM:
+
+10. Crear cuenta en huggingface.co (gratuito)
+11. Ir a Settings > Access Tokens > New token (role: Read)
+12. Copiar el token (empieza por hf_...) y guardarlo como variable de entorno HF_TOKEN
+
+Cualquier duda técnica sobre el notebook o los errores que aparezcan debe documentarse en el propio notebook con la solución encontrada — esa capacidad de resolución forma parte de la evaluación.
